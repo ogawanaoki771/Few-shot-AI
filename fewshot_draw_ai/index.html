@@ -1,0 +1,86 @@
+<html>
+
+<body>
+
+<h2>Draw Shape</h2>
+
+
+<canvas 
+id="canvas"
+width="300"
+height="300"
+style="border:1px solid black">
+</canvas>
+
+
+<br>
+
+<button onclick="save()">
+保存
+</button>
+
+
+<script>
+
+let canvas =
+document.getElementById("canvas");
+
+let ctx =
+canvas.getContext("2d");
+
+
+ctx.lineWidth=5;
+
+
+canvas.onmousemove=function(e){
+
+if(e.buttons){
+
+ctx.lineTo(
+e.offsetX,
+e.offsetY
+);
+
+ctx.stroke();
+
+}
+
+}
+
+
+async function save(){
+
+canvas.toBlob(async function(blob){
+
+let form =
+new FormData();
+
+form.append(
+"file",
+blob,
+"draw.png"
+);
+
+
+await fetch(
+"/upload",
+{
+method:"POST",
+body:form
+}
+);
+
+
+alert("saved");
+
+});
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>
