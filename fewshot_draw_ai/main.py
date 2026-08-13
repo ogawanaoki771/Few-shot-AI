@@ -1,51 +1,85 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import FileResponse
+
 from PIL import Image
 import numpy as np
 import io
 import os
 
 
+from train import train_model
+from predict import predict_image
+
+
+
 app = FastAPI()
 
 
-os.makedirs("data/train", exist_ok=True)
-os.makedirs("data/test", exist_ok=True)
+
+os.makedirs(
+    "data/train",
+    exist_ok=True
+)
+
+os.makedirs(
+    "data/test",
+    exist_ok=True
+)
 
 
 
 @app.get("/")
 def home():
-    return FileResponse("index.html")
 
-
-
-@app.post("/upload")
-async def upload(
-    file: UploadFile = File(...)
-):
-
-    img_bytes = await file.read()
-
-    img = Image.open(
-        io.BytesIO(img_bytes)
-    ).convert("L")
-
-
-    # 50×50へ縮小
-    img = img.resize(
-        (50,50)
+    return FileResponse(
+        "index.html"
     )
 
 
-    arr = np.array(img)
+
+# ==========================
+# PNG → 64×64 numpy
+# ==========================
+
+@app.post("/upload")
+async def upload(
+    file:UploadFile=File(...)
+):
 
 
-    # 二値化
-    arr = (arr < 128).astype(np.float32)
+    data = await file.read()
 
 
-    filename = "data/train/img_001.npy"
+    img = Image.open(
+        io.BytesIO(data)
+    ).convert("L")
+
+
+    img = img.resize(
+        (64,64)
+    )
+
+
+    arr=np.array(
+        img
+    )
+
+
+    arr = (
+        arr < 128
+    ).astype(
+        np.float32
+    )
+
+
+
+    filename = (
+        "data/train/"
+        +
+        file.filename
+        +
+        ".npy"
+    )
 
 
     np.save(
@@ -55,6 +89,49 @@ async def upload(
 
 
     return {
-        "message":"saved",
-        "shape":arr.shape
+
+        "saved":filename,
+
+        "shape":
+        arr.shape
+
+    }
+
+
+
+# ==========================
+# train
+# ==========================
+
+
+@app.post("/train")
+def train():
+
+    result=train_model()
+
+
+    return result
+
+
+
+# ==========================
+# predict
+# ==========================
+
+
+@app.post("/predict")
+async def predict(
+    file:UploadFile=File(...)
+):
+
+
+    data=await file.read()
+
+
+    result=predict_image(
+        data
+    )
+
+
+    return result
     }
