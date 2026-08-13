@@ -1,44 +1,30 @@
-import numpy as np
-import glob
-from model import FewShotModel
+from model import FewShotAdaptiveModel
+from classifier import FewShotClassifier
 
 
-X=[]
-y=[]
+# train data
+
+train_features=[]
 
 
-files = glob.glob(
-"data/train/*.npy"
-)
+feature_model = FewShotAdaptiveModel()
 
 
-for i,f in enumerate(files):
 
-    img=np.load(f)
+for x in train_coords:
 
-    X.append(
-        img.flatten()
+    f = feature_model.encode(
+        x
     )
 
-    # 仮ラベル
-    y.append(i%2)
+    train_features.append(f)
 
 
 
-model = FewShotModel()
+classifier = FewShotClassifier()
 
 
-model.fit(
-    np.array(X),
-    np.array(y)
-)
-
-
-model.save(
-"saved_model/fewshot.pkl"
-)
-
-
-print(
-"training finished"
+classifier.fit(
+    train_features,
+    train_labels
 )
